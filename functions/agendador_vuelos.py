@@ -69,11 +69,10 @@ class agenda(object):
         Determina con True/False si el ticket T
         se puede establecer en su hora de vuelo
         T.hora_vuelo
-
         """
-
         m = T.hora_vuelo
         d = T.distancia
+        cabe = deterina_tiempo(m,T.origen, T.destino, an)
 
         if(cabe):
             return True
@@ -107,8 +106,7 @@ def agenda_ticket( t ):
     para asignarle una aeronave de todas
     las posibles aeronaves
     """
-    for
 
 if __name__ == '__main__':
-
+    pass
 
