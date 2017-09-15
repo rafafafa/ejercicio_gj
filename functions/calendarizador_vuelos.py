@@ -2,6 +2,7 @@
 #coding:utf8
 
 import sys
+from math import sin, cos, atan2,sqrt, radians
 
 class aeronave(object):
     def __init__(self, vc, c, matricula):
@@ -13,7 +14,7 @@ class aeronave(object):
     @property
     def capacidad(self): return self.__c
     @property
-    def id(self). return self.__m
+    def id(self): return self.__m
 
 class ticket(object):
     def __init__(self, n,m,o,d):
@@ -21,6 +22,7 @@ class ticket(object):
         self.__hv = m
         self.__origen  = o
         self.__destino = d
+        self.__calcula_distancia()
     def __haversine(self,c1,c2):
         """
         Calcula las distancia de Haversine entre c1 y c2
@@ -40,15 +42,15 @@ class ticket(object):
     @property
     def hora_reserva(self): return self.__hr
     @property
-    def origen(self): return self.__o
+    def origen(self): return self.__origen
     @property
-    def destino(self): return self.__d
-    def __distancia(self):
-        self.distancia = self.__haversine(self.__o,self.__d)
+    def destino(self): return self.__destino
+    def __calcula_distancia(self):
+        d = self.__haversine(self.__origen,self.__destino)
+        self.__distancia = d
     @property
     def distancia(self):
-        self.__distancia(self.__o, self.__d)
-        return self.distancia
+        return self.__distancia
 
 class agenda(object):
     """
@@ -63,8 +65,8 @@ class agenda(object):
     def __init__(self):
         self.__A = dict()
     def agenda_vuelo(self, T):
-        A[T.hora_vuelo] = T
-    def cabe_vuelo(self, T, an):
+        A[T.hora_viaje] = T
+    def cabe_vuelo(self, S, T, an, th):
         """
         Determina con True/False si el ticket T
         se puede establecer en su hora de vuelo
@@ -72,8 +74,7 @@ class agenda(object):
         """
         m = T.hora_vuelo
         d = T.distancia
-        cabe = deterina_tiempo(m,T.origen, T.destino, an)
-
+        cabe = cabe_viaje(m,T.origen, T.destino, an, th)
         if(cabe):
             return True
         else:
@@ -81,10 +82,9 @@ class agenda(object):
 
 
 #diccionario de aeronaves
-A = {1:aeronave(100, 3), 2:aeronave(140, 5)}
+A = {1:aeronave(100, 3,'XXX'), 2:aeronave(140, 5, 'YYY')}
 
 #diccionario de
-agenda =
 
 
 def calcula_tiempo(d1,d2,an):
@@ -98,6 +98,13 @@ def calcula_tiempo(d1,d2,an):
     t = d/vc
     return t
 
+def cabe_viaje(hi, origen, destino, an, th):
+    tiempo = calcula_tiempo(origen,destino,an)
+    if(hi + tiempo<=th):
+        return True
+    else:
+        return False
+
 def agenda_ticket( t ):
     """
     Recibe un ticket t (diccionario) que
@@ -106,6 +113,7 @@ def agenda_ticket( t ):
     para asignarle una aeronave de todas
     las posibles aeronaves
     """
+
 
 if __name__ == '__main__':
     pass
