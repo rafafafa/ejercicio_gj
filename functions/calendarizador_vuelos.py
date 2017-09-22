@@ -15,6 +15,23 @@ class aeronave(object):
     def capacidad(self): return self.__c
     @property
     def id(self): return self.__m
+    def tiempo_crucero(self, d):
+        """
+        Calcula el tiempo crucero en el que
+        esta aeronave recorre la distancia d
+        """
+        tc = d / self.__vc
+        return tc
+    def calcula_tiempo(self, d1, d2):
+        """
+        Calcula el tiempo en el que
+        esta aeronave recorre la distancia
+        |d1-d2|
+        """
+        dt = abs(d2-d1)
+        tc = self.tiempo_crucero(dt)
+        return tc
+
 
 class ticket(object):
     def __init__(self, n,m,o,d):
@@ -64,9 +81,62 @@ class agenda(object):
     """
     def __init__(self):
         self.__A = dict()
-    def agenda_vuelo(self, T):
-        A[T.hora_viaje] = T
-    def cabe_vuelo(self, S, T, an, th):
+        self.__actual = 0
+    def __siguiente_evento_idx(m):
+        L = self.__A.keys()
+        maxi = len(L) - 1
+        if(m<maxi):
+            return L[m+1]
+        else:
+            return -1
+    def __genera_rango(self, m, r=4, s=0.25, factor=3600):
+        """
+        Calcula un rango de tiempo centrado en m
+        de radio r con un step s
+        El factor multiplica a m-r y s para dejarlos
+        en las mismas unidades. Es decir, ambos
+        deben estar en la misma unidad temporal
+        """
+        R = set(range(m-r*factor, m+r*factor, int(s*factor)))
+        return R
+    def __ocupados(self, m):
+        """
+        Determina los lugares ocupados en la agenda
+        centrados en la hora m y con un rango de 4 horas
+        """
+        R = self.__genera_rango(m)
+        L = self.__A.keys()
+        D = R.intersection(L)
+        return list(D)
+    def __hora_libre(m,k,r=4):
+        """
+        Función booleana que regresa True
+        si m es una hora libre de tamaño k
+        """
+        D = self.__A
+        R = D.get(m,1)
+        if(R==1): #no existe agendado, falta checar que quepa
+            K = self.__rango(m)
+            #asignamos temporalmente el ticket
+            D[m] = 'temporal'
+            idxsig = self.__siguiente_evento_idx(m)
+            Sig = D[idxsig] #evento siguiente al planeado en m
+            Ts,hr,an = Sig
+            if(m+k>=hr):
+                return False
+            else:
+                return True
+    def agenda_vuelo(self, T,hr,an):
+        """
+        Método que agenda el ticket T
+        en la hora hr con la aeronave an
+        """
+        if(self.cabe_vuelo(T,hr,an)):
+            A[T] = (T, hr, an)
+            return 1
+        else:
+            return 0
+    def cabe_vuelo(self, T, an):
         """
         Determina con True/False si el ticket T
         se puede establecer en su hora de vuelo
@@ -74,29 +144,19 @@ class agenda(object):
         """
         m = T.hora_vuelo
         d = T.distancia
-        cabe = cabe_viaje(m,T.origen, T.destino, an, th)
-        if(cabe):
-            return True
-        else:
-            return False
+        tc = an.tiempo_crucero(d)
+        print("incompleto")
+
+
+
+
+
 
 
 #diccionario de aeronaves
 A = {1:aeronave(100, 3,'XXX'), 2:aeronave(140, 5, 'YYY')}
 
-#diccionario de
 
-
-def calcula_tiempo(d1,d2,an):
-    """
-    Funcion que calcula el tiempo en
-    el que la aeronave an recorre
-    |d2-d1|
-    """
-    vc = an.velocidad_crucero
-    d = abs(d2-d1)
-    t = d/vc
-    return t
 
 def cabe_viaje(hi, origen, destino, an, th):
     tiempo = calcula_tiempo(origen,destino,an)
