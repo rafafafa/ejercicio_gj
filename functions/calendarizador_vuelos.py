@@ -20,16 +20,14 @@ class aeronave(object):
     def id(self): return self.__m
     def tiempo_crucero(self, d):
         """
-        Calcula el tiempo crucero en el que
-        esta aeronave recorre la distancia d
+        Tiempo crucero en que esta aeronave recorre la distancia d
         """
         tc = d / self.__vc
         return tc
     def calcula_tiempo(self, d1, d2):
         """
-        Calcula el tiempo en el que
-        esta aeronave recorre la distancia
-        |d1-d2|
+        Calcula el tiempo en el que esta aeronave recorre
+        la distancia |d1-d2|
         """
         dt = abs(d2-d1)
         tc = self.tiempo_crucero(dt)
@@ -149,8 +147,8 @@ class agenda(object):
         centrados en la hora m y con un rango de 4 horas
         """
         R = self.__genera_rango(m)
-        D = self.__P.intersection(R)
-        D = R.difference(D)
+        K = set(self.__A.keys())
+        D = R.difference(K)
         return sorted(list(D))
     def ocupados(self, m):
         return self.__ocupados(m)
@@ -174,7 +172,6 @@ class agenda(object):
         ed = R[-1]     #extremo derecho del intervalo R
         m, n, o, d = T.hora_viaje, T.hora_reserva, T.origen, T.destino
         iS = [ i for i in K if i > hs ]
-        #print "ed {0}".format(ed)," "
         if(len(iS)>0):
             isig = iS[0]
             S = A[isig]
@@ -218,7 +215,6 @@ class agenda(object):
         #    if(self.__cabe_vuelo(T,L[i], L)):
         #        I.append(L[i])
         for r in L:
-            #print r," ",
             if(self.__cabe_vuelo(T,r,L)):
                 I.append(r)
         I = [L[r] for r in argsort([abs(m-x) for x in L])]
@@ -228,14 +224,14 @@ class agenda(object):
         Método que agenda el ticket T
         en la hora hr con la aeronave an
         """
+        print("\n>>>>>>Agendando>>>>>>>>>>")
         dist     = T.distancia
         an       = self.__an
         duracion = int(an.tiempo_crucero(dist)*s)+1 #porque el tiempo está en horas
         #print(duracion)
         m        = T.hora_viaje
-        #print("hora deseada: {0}".format(m))
         cm       = self.cercano(m)
-        #print("punto cercano {0}".format(cm))
+        print("hora deseada {0} hora cercana {1}".format(m,cm))
         R        = self.__genera_rango(cm)
         #print("rango previo {0}".format(sorted(list(R))))
         V = []
@@ -246,19 +242,15 @@ class agenda(object):
             except:
                 pass
         W = set(V)
-        #print("validos {0}".format(W))
         L        = self.cabe(T, V)
-        #print("cabe: "+str(L))
         if(len(L)>0):
             pm = L[0]
             self.__A[pm] = (T, pm)
-            #print("quitando {0}".format(R))
-            self.__P     = self.__P.difference(R)
-            #print("longitud de libres P {0} y totales M {1}".format(len(self.__P),len(self.__M)))
-            #print(">>>>>>>>>>>> 1")
+            dur = int(an.tiempo_crucero(dist))+1
+            D = set(range(pm ,pm+dur,self.__tick))
+            self.__P     = self.__P.difference(D)
             return 1
         else:
-            #print(">>>>>>>>>>>> 0")
             return 0
 
 
