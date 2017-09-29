@@ -241,11 +241,11 @@ class agenda(object):
             except:
                 pass
         W = set(V)
-        L        = self.cabe(T, V)
+        L = self.cabe(T, V)
         if(len(L)>0):
             pm = L[0]
             self.__A[pm] = (T, pm)
-            dur = int(an.tiempo_crucero(dist))+1
+            dur = int(an.tiempo_crucero(dist)*s)+1
             D = set(range(pm ,pm+dur,self.__tick))
             self.__P     = self.__P.difference(D)
             return 1

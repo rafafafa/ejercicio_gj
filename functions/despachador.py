@@ -4,7 +4,7 @@
 import pandas as pd
 import sys
 import calendarizador_vuelos as cv
-from random import choice
+from random import choice, shuffle
 
 def genera_solicitud(reg):
     m = reg.fvn
@@ -19,20 +19,14 @@ def procesa_solicitud(sol, nh, nj, H, J):
     if(hl1.tiempo_crucero(sol.distancia)>2):
         for j in Aj:
             r = j.agenda_vuelo(sol)
-            if(r==1):
-                break
+            if(r==1): break
         return r
     else:
-        for h in Ah:
+        A = Aj + Ah
+        shuffle(A)
+        for h in A:
             r = h.agenda_vuelo(sol)
-            if(r==1):
-                break
-        if(r==0):
-            for j in Aj:
-                r = j.agenda_vuelo(sol)
-                if(r==1):
-                    break
-            return r
+            if(r==1): break
         return r
 
 
@@ -61,6 +55,7 @@ if __name__ == '__main__':
         reg = df.ix[s]
         sol = genera_solicitud(reg)
         r = procesa_solicitud(sol, nh, nj, H, J)
+
         df.ix[s,'status'] = r
 
     df.to_csv('demanda_procesada.csv')
