@@ -53,7 +53,7 @@ class ticket(object):
               " - d:"+str(self.__destino)
         return cad
     @staticmethod
-    def haversine(c1,c2):
+    def haversine(c1,c2,factor=1.852):
         """
         Calcula las distancia de Haversine entre c1 y c2
         """
@@ -66,7 +66,7 @@ class ticket(object):
             * cos(radians(lat2)) * sin(dlon/2) * sin(dlon/2)
         c = 2 * atan2(sqrt(a), sqrt(1-a))
         d = R*c
-        return d;
+        return d/factor;
     @property
     def hora_viaje(self): return self.__hv
     @property
@@ -92,9 +92,9 @@ class agenda(object):
     el vuelo de T.origen a T.destino puede establecerse
     en T.hora_vuelo
     """
-    def __init__(self, an, tick=900, dur=30 ):
+    def __init__(self, an, tick=900, dur=90 ):
         """
-        Genera una agenda con duracion dur (30) días
+        Genera una agenda con duracion dur (90) días
         que deben ser convertidos a segundos
         y cada paso es de 900 segundos.
 
@@ -224,7 +224,6 @@ class agenda(object):
         Método que agenda el ticket T
         en la hora hr con la aeronave an
         """
-        print("\n>>>>>>Agendando>>>>>>>>>>")
         dist     = T.distancia
         an       = self.__an
         duracion = int(an.tiempo_crucero(dist)*s)+1 #porque el tiempo está en horas
