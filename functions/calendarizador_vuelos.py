@@ -35,7 +35,7 @@ class aeronave(object):
 
 
 class ticket(object):
-    def __init__(self, n,m,o,d):
+    def __init__(self, m,n,o,d):
         """
         Clase ticket o solicitud de vuelo
         Se instancia con
