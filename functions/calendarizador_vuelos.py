@@ -2,13 +2,16 @@
 #coding:utf8
 
 import sys
-from math import sin, cos, atan2,sqrt, radians
+from math import sin, cos, atan2, sqrt, radians
+from numpy import argmin, argsort
 
 class aeronave(object):
     def __init__(self, vc, c, matricula):
-        self.__vc = vc
-        self.__c  = c
-        self.__m  = matricula
+        self.__vc = vc   #vel crucero
+        self.__c  = c    #capacidad
+        self.__m  = matricula #id
+    def __str__(self):
+        return str(self.__m)+" "+str(self.__c)+" "+str(self.__vc)
     @property
     def velocidad_crucero(self): return self.__vc
     @property
@@ -35,12 +38,24 @@ class aeronave(object):
 
 class ticket(object):
     def __init__(self, n,m,o,d):
+        """
+        Clase ticket o solicitud de vuelo
+        Se instancia con
+        (hora reserva, hora deseada de viaje, origen y destino)
+        """
         self.__hr = n
         self.__hv = m
         self.__origen  = o
         self.__destino = d
         self.__calcula_distancia()
-    def __haversine(self,c1,c2):
+    def __str__(self):
+        cad = "m:" + str(self.__hv) + \
+              " - n:" + str(self.__hr) + \
+              " - o:" + str(self.__origen) + \
+              " - d:"+str(self.__destino)
+        return cad
+    @staticmethod
+    def haversine(c1,c2):
         """
         Calcula las distancia de Haversine entre c1 y c2
         """
@@ -63,7 +78,7 @@ class ticket(object):
     @property
     def destino(self): return self.__destino
     def __calcula_distancia(self):
-        d = self.__haversine(self.__origen,self.__destino)
+        d = self.haversine(self.__origen,self.__destino)
         self.__distancia = d
     @property
     def distancia(self):
@@ -79,25 +94,54 @@ class agenda(object):
     el vuelo de T.origen a T.destino puede establecerse
     en T.hora_vuelo
     """
-    def __init__(self):
-        self.__A = dict()
-        self.__actual = 0
-    def __siguiente_evento_idx(m):
+    def __init__(self, an, tick=900, dur=30 ):
+        """
+        Genera una agenda con duracion dur (30) días
+        que deben ser convertidos a segundos
+        y cada paso es de 900 segundos.
+
+        """
+        self.__an   = an #aeronave
+        self.__A    = dict() #eventos anotados
+        self.__T    = dur*24*60*60 #duracion de la simulación en segundos
+        self.__tick = tick
+        self.__P    = set(range(0,self.__T,tick)) #puntos posibles agendables
+        self.__M    = set(range(0,self.__T,tick))
+    def __str__(self):
+        cad = ''
         L = self.__A.keys()
-        maxi = len(L) - 1
-        if(m<maxi):
-            return L[m+1]
+        if(len(L)>0):
+            for k,v in self.__A.iteritems():
+                cad += str(k)+": ["+','.join(map(str,v))+"]\n"
         else:
-            return -1
-    def __genera_rango(self, m, r=4, s=0.25, factor=3600):
+            cad = 'Agenda vacia'
+        return cad
+    def __siguiente_evento_idx(self, m):
         """
-        Calcula un rango de tiempo centrado en m
-        de radio r con un step s
-        El factor multiplica a m-r y s para dejarlos
-        en las mismas unidades. Es decir, ambos
-        deben estar en la misma unidad temporal
+        Da el indice en el diccionario que tiene el siguiente evento posible
+        Si respuesta es -2 entonces no hay eventos registrados
+        Si respuesta es -1 entonces es el final de la lista
         """
-        R = set(range(m-r*factor, m+r*factor, int(s*factor)))
+        L = self.__A.keys()
+        if(len(L)>0):
+            try:
+                idx = L.index(m)
+            except:
+                return -2
+            if(idx==len(L)-1):
+                return L[idx]
+            else:
+                return L[idx+1]
+        else:
+            return -2
+    def __genera_rango(self, m, r=4, factor=3600):
+        """
+        Calcula un rango de tiempo centrado en m de radio r con un step s
+        El factor multiplica a m-r y s para dejarlos en las mismas unidades.
+        Es decir, ambos deben estar en la misma unidad temporal
+        """
+        s = self.__tick
+        R = set(range(m-(r*factor), (m+1)+(r*factor), s))
         return R
     def __ocupados(self, m):
         """
@@ -105,75 +149,120 @@ class agenda(object):
         centrados en la hora m y con un rango de 4 horas
         """
         R = self.__genera_rango(m)
-        L = self.__A.keys()
-        D = R.intersection(L)
-        return list(D)
-    def __hora_libre(m,k,r=4):
+        D = self.__P.intersection(R)
+        D = R.difference(D)
+        return sorted(list(D))
+    def ocupados(self, m):
+        return self.__ocupados(m)
+    def libres(self,m):
         """
-        Función booleana que regresa True
-        si m es una hora libre de tamaño k
+        Determina todos los lugares libres en la agenda
+        centrados en la hora m y con un rango de 4 horas
         """
-        D = self.__A
-        R = D.get(m,1)
-        if(R==1): #no existe agendado, falta checar que quepa
-            K = self.__rango(m)
-            #asignamos temporalmente el ticket
-            D[m] = 'temporal'
-            idxsig = self.__siguiente_evento_idx(m)
-            Sig = D[idxsig] #evento siguiente al planeado en m
-            Ts,hr,an = Sig
-            if(m+k>=hr):
+        R = self.__genera_rango(m)
+        #print("libres {0}".len(R))
+        L = R.intersection(self.__P)
+        return sorted(list(L))
+    def __cabe_vuelo(self, T, hs, R):
+        """
+        Determina con True/False si el ticket T se puede establecer
+        en su hora de vuelo en la hora sugerida hs
+        """
+        A = self.__A   #copia de la agenda
+        K = A.keys()   #llaves de los eventos agendados
+        an = self.__an #aeronave
+        ed = R[-1]     #extremo derecho del intervalo R
+        m, n, o, d = T.hora_viaje, T.hora_reserva, T.origen, T.destino
+        iS = [ i for i in K if i > hs ]
+        #print "ed {0}".format(ed)," "
+        if(len(iS)>0):
+            isig = iS[0]
+            S = A[isig]
+            Tk, hk = S
+            ok, _ = Tk.origen, Tk.destino
+            dk = ticket.haversine(d,ok)
+            dm = ticket.haversine(o,d)
+            tc = an.tiempo_crucero(dk+dm)
+            if(hs+tc > hk):
                 return False
             else:
                 return True
-    def agenda_vuelo(self, T,hr,an):
+        else:
+            tc = an.tiempo_crucero(T.distancia)
+            if(hs+tc > ed):
+                return False
+            else:
+                return True
+    def __busca_cercano(self, m):
+        """
+        Método que busca dentro de los puntos libres
+        el más cercano al segundo m dentro del rango
+        de +-4 horas
+        """
+        L = list(sorted(self.__M))
+        idx = argmin([abs(m-x) for x in L])
+        return L[idx]
+    def cercano(self, m):
+        p =  self.__busca_cercano(m)
+        return p
+    def cabe(self, T, R):
+        """
+        Se establece la solicitud T en el espacio
+        en el que quepa más cercano a su hora de
+        vuelo deseada
+        """
+        m = T.hora_viaje
+        L = sorted(list(R))
+        I = []
+        #for i in range(len(L)):
+        #    if(self.__cabe_vuelo(T,L[i], L)):
+        #        I.append(L[i])
+        for r in L:
+            #print r," ",
+            if(self.__cabe_vuelo(T,r,L)):
+                I.append(r)
+        I = [L[r] for r in argsort([abs(m-x) for x in L])]
+        return I
+    def agenda_vuelo(self, T, s=3600):
         """
         Método que agenda el ticket T
         en la hora hr con la aeronave an
         """
-        if(self.cabe_vuelo(T,hr,an)):
-            A[T] = (T, hr, an)
+        dist     = T.distancia
+        an       = self.__an
+        duracion = int(an.tiempo_crucero(dist)*s)+1 #porque el tiempo está en horas
+        #print(duracion)
+        m        = T.hora_viaje
+        #print("hora deseada: {0}".format(m))
+        cm       = self.cercano(m)
+        #print("punto cercano {0}".format(cm))
+        R        = self.__genera_rango(cm)
+        #print("rango previo {0}".format(sorted(list(R))))
+        V = []
+        for r in R:
+            try:
+                if(list(self.__P).index(r)>0):
+                    V.append(r)
+            except:
+                pass
+        W = set(V)
+        #print("validos {0}".format(W))
+        L        = self.cabe(T, V)
+        #print("cabe: "+str(L))
+        if(len(L)>0):
+            pm = L[0]
+            self.__A[pm] = (T, pm)
+            #print("quitando {0}".format(R))
+            self.__P     = self.__P.difference(R)
+            #print("longitud de libres P {0} y totales M {1}".format(len(self.__P),len(self.__M)))
+            #print(">>>>>>>>>>>> 1")
             return 1
         else:
+            #print(">>>>>>>>>>>> 0")
             return 0
-    def cabe_vuelo(self, T, an):
-        """
-        Determina con True/False si el ticket T
-        se puede establecer en su hora de vuelo
-        T.hora_vuelo
-        """
-        m = T.hora_vuelo
-        d = T.distancia
-        tc = an.tiempo_crucero(d)
-        print("incompleto")
-
-
-
-
-
 
 
 #diccionario de aeronaves
-A = {1:aeronave(100, 3,'XXX'), 2:aeronave(140, 5, 'YYY')}
-
-
-
-def cabe_viaje(hi, origen, destino, an, th):
-    tiempo = calcula_tiempo(origen,destino,an)
-    if(hi + tiempo<=th):
-        return True
-    else:
-        return False
-
-def agenda_ticket( t ):
-    """
-    Recibe un ticket t (diccionario) que
-    contiene
-    {n:valor, m: valor, o:origen, d:destino}
-    para asignarle una aeronave de todas
-    las posibles aeronaves
-    """
-
 
 if __name__ == '__main__':
     pass
