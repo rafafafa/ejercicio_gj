@@ -1,37 +1,38 @@
 #!/usr/python
 #coding:utf8
-
+import sys
 import calendarizador_vuelos as cv
+import pandas as pd
 
 hl = cv.aeronave(100, 3,'R66')
 jt = cv.aeronave(140, 5, 'VPA 34')
 A = {'hl':hl, 'jt':jt}
 
 #Definiendo un ticket nuevo
-T = cv.ticket(100,100,(19.24647,-99.10135),(20.593056,-100.392222))
-org = T.origen
-dst = T.destino
-print("Ticket con origen {0} y destino {1}".format(org,dst))
-d = T.distancia
-print("La distancia entre el origen y el destino es {0}".format(d))
-print("La hora de salida es {0}".format(T.hora_viaje))
-print("El vuelo fue reservado en {0}".format(T.hora_reserva))
-
 S = cv.ticket(120,120, (20.593056,-100.392222), (19.24647,-99.10135))
-org2 = S.origen
-dst2 = S.destino
-print("Ticket con origen {0} y destino {1}".format(org,dst))
-d2 = S.distancia
-print("La distancia entre el origen y el destino es {0}".format(d2))
-print("La hora de salida es {0}".format(S.hora_viaje))
-print("El vuelo fue reservado en {0}".format(S.hora_reserva))
+T = cv.ticket(100,100,(19.24647,-99.10135),(20.593056,-100.392222))
+U = cv.ticket(882900,882900,(19.24647,-99.10135),(20.593056,-100.392222))
+W = cv.ticket(1808,1808,(19.24647,-99.10135),(20.593056,-100.392222))
 
-#Definiendo una agenda
-G = cv.agenda()
-print("Agendando T en la agenda G")
-G.agenda_vuelo(T)
-print("Determinando si el vuelo S puede ser agendado en G con la aeronave {0}".format(A['jt'].id))
-c = G.cabe_vuelo(S,T,A['jt'],1)
+#Definiendo una agenda para el helicóptero
+H = cv.agenda(hl)
+J = cv.agenda(jt)
 
+H.agenda_vuelo(T)
+print(H)
+H.agenda_vuelo(T)
+print(H)
+H.agenda_vuelo(S)
+print(H)
+H.agenda_vuelo(U)
+print(H)
+H.agenda_vuelo(U)
+print(H)
+
+if __name__=='__main__':
+    #nh = int(sys.argv[1])
+    #nj = int(sys.argv[2])
+    #df = pd.read_csv('demandas.csv')
+    pass
 
 
