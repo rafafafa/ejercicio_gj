@@ -16,6 +16,7 @@ def genera_solicitud(reg):
 def procesa_solicitud(sol, nh, nj, H, J):
     Aj = J[:nj]
     Ah = H[:nh]
+    hl1 = hls[0]
     if(hl1.tiempo_crucero(sol.distancia)>2):
         for j in Aj:
             r = j.agenda_vuelo(sol)
@@ -36,20 +37,19 @@ if __name__ == '__main__':
     nj = int(sys.argv[2])
     df = pd.read_csv('demanda.csv')
 
-    hl1 = cv.aeronave(100, 3,'R66')
-    hl2 = cv.aeronave(100, 3,'R67')
-    jt1 = cv.aeronave(140, 5,'VPA 34')
-    jt2 = cv.aeronave(140, 5,'VPA 35')
+    if(nh>0):
+        hls = [ cv.aeronave(100, 3, i) for i in range(nh) ]
+        H = [ cv.agenda(hl) for hl in hls ]
+    else:
+        hls = []
+        H = []
 
-    if(nh==2):
-        H = [ cv.agenda(hl1), cv.agenda(hl2) ]
-    elif(nh==1):
-        H = [ cv.agenda(hl1) ]
-
-    if(nj==2):
-        J = [ cv.agenda(jt1), cv.agenda(jt2) ]
-    elif(nj==1):
-        J = [ cv.agenda(jt1) ]
+    if(nj>0):
+        jts = [ cv.aeronave(140, 5, i) for i in range(nj) ]
+        J = [ cv.agenda(jt) for jt in jts ]
+    else:
+        jts = []
+        J = []
 
     for s in range(len(df)):
         reg = df.ix[s]
